@@ -30,13 +30,21 @@ class CPU {
 
         uint8_t memory[65536] = {};
 
-        void inc_16(registerpair& reg);
+        void inc_16(register_pair& reg);
 
         uint16_t fetch_16();
 
-        void ld_mem_reg(registerpair& reg, uint8_t value);
+        uint8_t fetch_8();
+
+        void ld_mem_reg(register_pair& reg, uint8_t value);
 
         void inc_8(uint8_t& byte);
+
+        void dec_8(uint8_t& byte);
+
+        void set_16(uint16_t address, uint16_t data);
+
+        void add_16(uint16_t value_1, uint16_t value_2);
 
     public:
         
