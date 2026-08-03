@@ -4,6 +4,10 @@ void CPU::inc_16(register_pair& reg) {
     reg.set(reg.get() + 0x0001);
 }
 
+void CPU::dec_16(register_pair& reg) {
+    reg.set(reg.get() - 0x0001);
+}
+
 uint16_t CPU::fetch_16() {
     uint8_t low = fetch_8();
     uint8_t high = fetch_8();
@@ -44,22 +48,21 @@ uint16_t CPU::add_16(uint16_t value_1, uint16_t value_2) {
     set_sub_flag(false);
     uint32_t sum = static_cast<uint32_t>(value_1)+static_cast<uint32_t>(value_2);
     set_carry_flag(sum > 0x0000FFFF);
-    
+    return sum;
 }
 
 void CPU::tick() {
     cycle_count = 0;
     uint8_t opcode = get_memory_temp(PC);
-    PC+=1;
+    PC++;
     switch (opcode) {
         case 0x00: // no operation
             cycle_count += 4;
             break;
-        case 0x01: { // LD BC, d16
+        case 0x01: // LD BC, d16
             BC.set(fetch_16());
             cycle_count += 12;
             break;
-        }
         case 0x02: // LD (BC), A
             ld_mem_reg(BC, AF.high);
             cycle_count += 8;
@@ -95,7 +98,76 @@ void CPU::tick() {
             cycle_count += 20;
             break;
         case 0x09: // ADD HL, BC
-            
-
+            HL.set(add_16(HL.get(), BC.get()));
+            cycle_count += 8;
+            break;
+        case 0x0A: // LD A, (BC)
+            AF.high = get_memory_temp(BC.get());
+            cycle_count += 8;
+            break;
+        case 0x0B: // DEC BC
+            dec_16(BC);
+            break;
+        case 0x0C: // INC C
+            inc_8(BC.low);
+            cycle_count += 4;
+            break;
+        case 0x0D: // DEC C
+            dec_8(BC.low);
+            cycle_count += 4;
+            break;
+        case 0x0E: // LD C, d8
+            BC.low = fetch_8();
+            cycle_count += 8;
+            break;
+        case 0x0F: { // RRCA
+            uint8_t small_bit = AF.high && 0x01;
+            set_carry_flag(small_bit == 0x01);
+            AF.high = (AF.high >> 1) | (small_bit << 7);
+            set_zero_flag(false);
+            set_sub_flag(false);
+            set_half_carry_flag(false);
+            cycle_count += 4;
+            break;
+        }
+        case 0x10: // STOP 0
+            PC++;
+            cycle_count+=4;
+            break;
+        case 0x11: // LD DE, d16
+            DE.set(fetch_16());
+            cycle_count += 12;
+            break;
+        case 0x12: // LD (DE), A
+            ld_mem_reg(DE, AF.high);
+            cycle_count += 8;
+            break;
+        case 0x13: // INC DE
+            inc_16(DE);
+            cycle_count+=8;
+            break;
+        case 0x14: // INC D
+            inc_8(DE.high);
+            cycle_count+=4;
+            break;
+        case 0x15: // DEC D
+            dec_8(DE.high);
+            cycle_count+=4;
+            break;
+        case 0x16: // LD B, d8
+            BC.high = fetch_8();
+            cycle_count += 8;
+            break;
+        case 0x17: { // RLA
+            uint8_t big_bit = AF.high && 0x80;
+            AF.high = (AF.high << 1) && get_carry_flag();
+            set_carry_flag(big_bit == 0x80);
+            set_zero_flag(false);
+            set_sub_flag(false);
+            set_half_carry_flag(false);
+            cycle_count += 4;
+            break;
+        }
+        case 0x18: 
     }
 }

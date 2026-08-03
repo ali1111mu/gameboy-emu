@@ -32,6 +32,8 @@ class CPU {
 
         void inc_16(register_pair& reg);
 
+        void dec_16(register_pair& reg);
+
         uint16_t fetch_16();
 
         uint8_t fetch_8();
@@ -44,7 +46,7 @@ class CPU {
 
         void set_16(uint16_t address, uint16_t data);
 
-        void add_16(uint16_t value_1, uint16_t value_2);
+        uint16_t add_16(uint16_t value_1, uint16_t value_2);
 
     public:
         
@@ -52,8 +54,8 @@ class CPU {
             AF.set(value & 0xFFF0);
         }
 
-        bool get_zero_flag() {
-            return (AF.low & 0x80) != 0;
+        uint8_t get_zero_flag() {
+            return (AF.low & 0x80) >> 7;
         }
 
         void set_zero_flag(bool value) {
@@ -64,8 +66,8 @@ class CPU {
             }
         }
 
-        bool get_sub_flag() {
-            return (AF.low & 0x40) != 0;
+        uint8_t get_sub_flag() {
+            return (AF.low & 0x40) >> 6;
         }
 
         void set_sub_flag(bool value) {
@@ -76,8 +78,8 @@ class CPU {
             }
         }
 
-        bool get_half_carry_flag() {
-            return (AF.low & 0x20) != 0;
+        uint8_t get_half_carry_flag() {
+            return (AF.low & 0x20) >> 5;
         }
 
         void set_half_carry_flag(bool value) {
@@ -88,8 +90,8 @@ class CPU {
             }
         }
 
-        bool get_carry_flag() {
-            return (AF.low & 0x10) != 0;
+        uint8_t get_carry_flag() {
+            return (AF.low & 0x10) >> 4;
         }
 
         void set_carry_flag(bool value) {
