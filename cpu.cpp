@@ -168,6 +168,11 @@ void CPU::tick() {
             cycle_count += 4;
             break;
         }
-        case 0x18: 
+        case 0x18: { // JR r8
+            int8_t offset = fetch_8();
+            PC += static_cast<int16_t>(offset);
+            cycle_count += 12;
+            break;
+        }
     }
 }
