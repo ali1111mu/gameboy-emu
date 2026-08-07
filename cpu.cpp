@@ -160,7 +160,7 @@ void CPU::tick() {
             break;
         case 0x17: { // RLA
             uint8_t big_bit = AF.high && 0x80;
-            AF.high = (AF.high << 1) && get_carry_flag();
+            AF.high = (AF.high << 1) | get_carry_flag();
             set_carry_flag(big_bit == 0x80);
             set_zero_flag(false);
             set_sub_flag(false);
@@ -174,5 +174,170 @@ void CPU::tick() {
             cycle_count += 12;
             break;
         }
+        case 0x19: // ADD HL, DE
+            HL.set(add_16(HL.get(), DE.get()));
+            cycle_count += 8;
+            break;
+        case 0x1A: // LD A, (DE)
+            AF.high = get_memory_temp(DE.get());
+            cycle_count += 8;
+            break;
+        case 0x1B: // DEC DE
+            dec_16(DE);
+            cycle_count += 8;
+            break;
+        case 0x1C: // INC E
+            inc_8(DE.low);
+            cycle_count += 4;
+            break;
+        case 0x1D: // DEC E
+            dec_8(DE.low);
+            cycle_count += 4;
+            break;
+        case 0x1E: // LD E, d8
+            DE.low = fetch_8();
+            cycle_count+=8;
+            break;
+        case 0x1F: {  // RRA 
+            uint8_t small_bit = AF.high & 0x01;
+            AF.high = (AF.high >> 1) | (get_carry_flag() << 7);
+            set_carry_flag(small_bit == 0x01);
+            set_half_carry_flag(false);
+            set_sub_flag(false);
+            set_zero_flag(false);
+            cycle_count += 4;
+            break;
+        }
+        case 0x20: { // JR NZ, r8
+            int8_t offset = fetch_8();
+            if (get_zero_flag() == 0x00) {
+                PC += static_cast<int16_t>(offset);
+                cycle_count += 12;
+            } else {
+                cycle_count += 8;
+            }    
+            break;
+        }
+        case 0x21: // LD HL, d16
+            HL.set(fetch_16());
+            cycle_count += 12;
+            break;
+        case 0x22: // LD (HL+), A
+            set_memory_temp(HL.get(), AF.high);
+            HL.set(HL.get()+1);
+            cycle_count += 8;
+            break;
+        case 0x23: // INC HL
+            inc_16(HL);
+            cycle_count += 8;
+            break;
+        case 0x24: // INC H
+            inc_8(HL.high);
+            cycle_count += 4;
+            break;
+        case 0x25: // DEC H
+            dec_8(HL.high);
+            cycle_count += 4;
+            break;
+        case 0x26: // LD H, d8
+            HL.high = fetch_8();
+            cycle_count += 8;
+            break;
+        case 0x27: { // DAA
+            uint8_t correction = 0;
+            bool set_carry = false;
+
+            if (get_sub_flag() == 0) {
+                if (AF.high > 0x99 || get_carry_flag() == 1) {
+                    correction += 0x60;
+                    set_carry = true;
+                }
+                if ((AF.high & 0x0F) > 0x09 || get_half_carry_flag() == 1) {
+                    correction += 0x06;
+                }
+            } else {
+                if (get_half_carry_flag() == 1) {
+                    correction -= 0x06;
+                }
+                if (get_carry_flag() == 1) {
+                    correction -= 0x60;
+                    set_carry = true;
+                }
+            }
+            
+            AF.high += correction;
+
+            set_zero_flag(AF.high == 0);
+            set_half_carry_flag(false);
+            set_carry_flag(set_carry);
+
+            cycle_count += 4;
+            break;
+        }
+        case 0x28: { // JR Z, r8
+            int8_t offset = fetch_8();
+            if (get_zero_flag() == 0x01) {
+                PC += static_cast<int16_t>(offset);
+                cycle_count += 12;
+            } else {
+                cycle_count += 8;
+            }    
+            break;
+        }
+        case 0x29: // ADD HL, HL
+            HL.set(add_16(HL.get(), HL.get()));
+            cycle_count += 8;
+            break; 
+        case 0x2A: // LD A, (HL+)
+            AF.high = get_memory_temp(HL.get());
+            HL.set(HL.get()+1);
+            cycle_count += 8;
+            break;
+        case 0x2B: // DEC HL
+            dec_16(HL);
+            cycle_count += 8;
+            break;
+        case 0x2C: // INC L
+            inc_8(HL.low);
+            cycle_count += 4;
+            break;
+        case 0x2D: // DEC L
+            dec_8(HL.low);
+            cycle_count += 4;
+            break;
+        case 0x2E: // LD L, d8
+            HL.low = fetch_8();
+            cycle_count += 8;
+            break;
+        case 0x2F: { // CPL
+            AF.high = ~AF.high;
+            set_sub_flag(true);
+            set_half_carry_flag(true);
+            cycle_count += 4;
+            break;
+        }
+        case 0x30: { // JR NC, r8
+            int8_t offset = fetch_8();
+            if (get_carry_flag() == 0x00) {
+                PC += static_cast<int16_t>(offset);
+                cycle_count += 12;
+            } else {
+                cycle_count += 8;
+            }    
+            break;
+        }
+        case 0x31: // LD SP, d16
+            SP = fetch_16();
+            cycle_count += 12;
+            break;
+        case 0x32: // LD (HL-), A
+            set_memory_temp(HL.get(), AF.high);
+            HL.set(HL.get() + 1);
+            cycle_count += 8;
+            break;
+        case 0x33: // INC SP
+            SP++;
+            cycle_count += 8;
+            break;           
     }
 }
