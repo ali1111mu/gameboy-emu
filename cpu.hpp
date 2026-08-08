@@ -48,8 +48,10 @@ class CPU {
 
         uint16_t add_16(uint16_t value_1, uint16_t value_2);
 
-    public:
-        
+        void inc_mem(uint16_t address);
+
+        void dec_mem(uint16_t address);
+
         void set_AF(uint16_t value) {
             AF.set(value & 0xFFF0);
         }
@@ -101,6 +103,10 @@ class CPU {
                 AF.low &= ~0x10;
             }
         }
+
+
+
+    public:
 
         // temporary memory functions
 

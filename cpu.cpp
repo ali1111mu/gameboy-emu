@@ -51,6 +51,18 @@ uint16_t CPU::add_16(uint16_t value_1, uint16_t value_2) {
     return sum;
 }
 
+void CPU::inc_mem(uint16_t address) {
+    uint8_t val = get_memory_temp(address);
+    set_half_carry_flag((val & 0x0F) == 0x0F);
+    set_memory_temp(address, ++val);
+    set_zero_flag(val == 0);
+    set_sub_flag(false);
+}
+
+void CPU::dec_mem(uint16_t address) {
+    uint8_t val = get_memory_temp(address);
+}
+
 void CPU::tick() {
     cycle_count = 0;
     uint8_t opcode = get_memory_temp(PC);
@@ -338,6 +350,12 @@ void CPU::tick() {
         case 0x33: // INC SP
             SP++;
             cycle_count += 8;
-            break;           
+            break;
+        case 0x34: // INC (HL)
+            inc_mem(HL.get());
+            cycle_count += 12;
+            break;
+        case 0x35: // DEC (HL)
+            
     }
 }
